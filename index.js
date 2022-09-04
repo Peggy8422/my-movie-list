@@ -12,6 +12,13 @@ const searchInput = document.querySelector('#search-input')
 const MOVIES_PER_PAGE = 12  //設定每頁要顯示的電影數量
 const paginator = document.querySelector('#paginator') //找出分頁器ul
 
+//--加碼功能新增變數--
+//顯示模式的切換
+const displayModeController = document.querySelector('#display-mode-toggle')
+let displayMode = Number(localStorage.getItem('displayMode')) || 0 //紀錄顯示模式(card是0，list是1)，同時把狀態計錄存取到localStorage，使用者下次開啟瀏覽器時會存取到前一次的顯示模式
+const showCurrentPage = document.querySelector('#current-page')
+let currentPage = 1 //在全域設定一個可讀取目前頁碼的變數以供切換顯示模式的函式存取
+
 //函式：分頁器-分頁顯示電影清單
 function getMoviesByPage(page) {
   const data = filterdMovies.length ? filterdMovies : movies
@@ -33,8 +40,8 @@ function renderPaginatorPages(amount) {
   paginator.innerHTML = rawHTML
 }
 
-//函式：渲染電影清單
-function renderMovieList(data) {
+//函式：渲染電影清單(卡片式)
+function renderMovieListByCard(data) {
   let rawHTML = ''
   data.forEach(item => {
     rawHTML += `
@@ -58,13 +65,64 @@ function renderMovieList(data) {
   })
   dataPanel.innerHTML = rawHTML 
 }
+//--加碼功能新增函式--
+//函式：渲染電影清單(清單式)
+function renderMovieListByList(data) {
+  let rawHTML = '<ul class="list-group list-group-flush">'
+  data.forEach(item => {
+    rawHTML += `
+      <li class="list-group-item">
+        <div class="row">
+          <div class="col-sm-10">
+            <h5 class="list-title d-inline-block">${item.title}</h5>
+          </div>
+          <div class="col-sm-2">
+            <button class="btn btn-primary btn-show-movie" data-bs-toggle="modal" data-bs-target="#movie-modal" data-id="${item.id}">More</button>
+            <button class="btn btn-info btn-add-favorite" data-id="${item.id}">+</button>
+          </div>
+        </div>
+      </li>
+    `
+  })
+  rawHTML += '</ul>'
+  dataPanel.innerHTML = rawHTML
+}
+//--加碼功能新增函式--
+//函式：檢查現在切換到何種顯示狀態再決定用哪個模式的樣板渲染
+function checkDisplayMode(page) {
+  if (displayMode === 0) {
+    renderMovieListByCard(getMoviesByPage(page))
+  } else if (displayMode === 1) {
+    renderMovieListByList(getMoviesByPage(page))
+  }
+}
+
+//--加碼功能新增函式--
+//函式：顯示當前頁的強調樣式
+function toggleActiveStyle(currentPage) {
+  const previousActivePage = document.querySelector('#paginator .active')
+  const pages = document.querySelectorAll('.page-item')
+  pages.forEach(page => {
+    if (Number(page.children[0].dataset.page) === currentPage) {
+      page.classList.add('active')
+    }
+  })
+  if (!previousActivePage || Number(previousActivePage.children[0].dataset.page) === currentPage) return
+  previousActivePage.classList.remove('active') 
+}
+
 //函式：顯示個別電影的詳細內容
 function showMovieDetail(id) {
   const movieTitle = document.querySelector('#movie-modal-title')
   const movieImage = document.querySelector('#movie-modal-image')
   const movieDate = document.querySelector('#movie-modal-date')
   const movieDescription = document.querySelector('#movie-modal-description')
-
+  // 先清空內容以防殘影
+  movieTitle.innerText = ''
+  movieImage.children[0].src = ''
+  movieDate.innerText = ''
+  movieDescription.innerText = ''
+  
   axios
     .get(Index_URL + id)
     .then(response => {
@@ -93,6 +151,8 @@ function addFavoriteMovie(id) {
 }
 
 
+//---------------------以下為主程式執行區---------------------------------
+
 //用新的空movies陣列裝取抓到的所有電影資料
 const movies = [] //初始-渲染電影清單畫面(沒操作任何功能時)
 let filterdMovies = [] //搜尋-渲染經過搜尋關鍵字篩選後的電影清單畫面
@@ -102,7 +162,9 @@ axios
     // console.log(response.data.results)
     movies.push(... response.data.results)
     renderPaginatorPages(movies.length)
-    renderMovieList(getMoviesByPage(1))
+    checkDisplayMode(1) //--加碼功能修改部分--
+    showCurrentPage.innerHTML = currentPage //--加碼功能修改部分--
+    toggleActiveStyle(currentPage) //--加碼功能修改部分--
   })
   .catch(error => console.log(error))
 
@@ -140,14 +202,35 @@ searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
     alert(`Cannot find movies with keyword: ${keyword}`)
   }
   renderPaginatorPages(filterdMovies.length)
-  renderMovieList(getMoviesByPage(1))
+  //頁面變成篩選過的電影清單時，當前頁面回到預設第1頁
+  currentPage = 1 //--加碼功能修改部分--
+  checkDisplayMode(currentPage) //--加碼功能修改部分--
+  showCurrentPage.innerHTML = currentPage //--加碼功能修改部分--
+  toggleActiveStyle(currentPage) //--加碼功能修改部分--
 
 })
+
 //點擊頁碼切換顯示的電影清單範圍
 paginator.addEventListener('click', function onPaginatorClicked(event) {
   if (event.target.tagName !== 'A') return
   const page = Number(event.target.innerHTML)
+  currentPage = page
   //OR:透過 dataset 取得被點擊的頁數
   //const page = Number(event.target.dataset.page)
-  renderMovieList(getMoviesByPage(page))
+  checkDisplayMode(page) //--加碼功能修改部分--
+  showCurrentPage.innerHTML = currentPage //--加碼功能修改部分--
+  toggleActiveStyle(currentPage) //--加碼功能修改部分--
+})
+
+//--加碼功能新增監聽事件--
+//點擊list, card icon切換顯示模式
+displayModeController.addEventListener('click', function onModeBtnClicked(event) {
+  if (event.target.matches('#list-style')) {
+    displayMode = 1
+  } else {
+    displayMode = 0
+  }
+  localStorage.setItem('displayMode', JSON.stringify(displayMode))
+  checkDisplayMode(currentPage) 
+  showCurrentPage.innerHTML = currentPage 
 })

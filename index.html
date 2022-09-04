@@ -10,6 +10,12 @@
     integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" 
     crossorigin="anonymous"
   />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <style>
+    #list-style:hover, #card-style:hover {
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
 <!-- navbar -->
@@ -33,17 +39,27 @@
   </nav>
   <div class="container mt-5">
     <div class="row mb-3">
-    <!-- search bar -->
-      <form class="row gy-2 gx-3 align-items-center" id="search-form">
-        <div class="col-auto">
-          <label class="visually-hidden" for="search-input">Search Keyword</label>
-          <input type="text" class="form-control" id="search-input" placeholder="keyword...">
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary" id="search-submit-btn">Submit</button>
-        </div>
-      </form>
+      <!-- show the current page -->
+      <h6>You are now on page <span id="current-page"></span>.</h6>
+      <!-- search bar -->
+      <div class="col-11">
+        <form class="row gy-2 gx-3 align-items-center" id="search-form">
+          <div class="col-auto">
+            <label class="visually-hidden" for="search-input">Search Keyword</label>
+            <input type="text" class="form-control" id="search-input" placeholder="keyword...">
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary" id="search-submit-btn">Submit</button>
+          </div>
+        </form>
+      </div>
+      <!-- display mode controller -->
+      <div id="display-mode-toggle" class="col-1">
+        <i id="list-style" class="fa-solid fa-bars col m-1"></i>
+        <i id="card-style" class="fa-solid fa-grip col m-1"></i>
+      </div>
     </div>
+
     <!-- Render Movie List -->
     <div class="row" id="data-panel">
       <!-- movie card -->
