@@ -50,7 +50,7 @@ function renderMovieListByList(data) {
           </div>
           <div class="col-sm-2">
             <button class="btn btn-primary btn-show-movie" data-bs-toggle="modal" data-bs-target="#movie-modal" data-id="${item.id}">More</button>
-            <button class="btn btn-info btn-add-favorite" data-id="${item.id}">+</button>
+            <button class="btn btn-danger btn-delete-favorite" data-id="${item.id}">x</button>
           </div>
         </div>
       </li>
